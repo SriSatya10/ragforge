@@ -1,0 +1,55 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ragforge}
+    username: ${SPRING_DATASOURCE_USERNAME:ragforge}
+    password: ${SPRING_DATASOURCE_PASSWORD:changeme}
+    # HikariCP connection pool — sensible defaults for a multi-tenant app
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema; Hibernate must not touch it
+      ddl-auto: validate
+    open-in-view: false  # Prevents lazy-loading bugs by closing sessions early
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+
+# Expose health + Prometheus metrics endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# JWT auth configuration — values injected from environment
+jwt:
+  secret: ${JWT_SECRET:default-dev-secret-change-in-production}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+# Application-specific settings
+app:
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  ml-service-url: ${ML_SERVICE_URL:http://localhost:8000}
+
+# File upload limits — Spring defaults to 1MB which is too small for PDFs
+spring.servlet.multipart:
+  max-file-size: 50MB
+  max-request-size: 50MB

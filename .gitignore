@@ -1,0 +1,30 @@
+# --- Environment ---
+.env
+
+# --- Java / Maven ---
+api/target/
+*.class
+*.jar
+*.war
+*.log
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Python ---
+ml-service/__pycache__/
+ml-service/.venv/
+*.pyc
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Node (k6 etc) ---
+node_modules/
