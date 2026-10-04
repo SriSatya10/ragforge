@@ -31,6 +31,9 @@ public class IngestionProducer {
 
     /** Redis Stream key where ingestion jobs are published */
     public static final String STREAM_KEY = "ingestion:jobs";
+    
+    /** Dead-Letter Queue stream for failed jobs */
+    public static final String DLQ_STREAM_KEY = "ingestion:dlq";
 
     private final StringRedisTemplate redisTemplate;
 

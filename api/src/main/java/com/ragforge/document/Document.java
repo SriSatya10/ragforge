@@ -28,6 +28,9 @@ public class Document {
     @Column(nullable = false)
     private String status = "PENDING";
 
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -49,6 +52,9 @@ public class Document {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public int getRetryCount() { return retryCount; }
+    public void setRetryCount(int retryCount) { this.retryCount = retryCount; }
 
     public Instant getCreatedAt() { return createdAt; }
 }

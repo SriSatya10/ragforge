@@ -128,10 +128,34 @@ public class IngestionWorker {
 
         } catch (Exception e) {
             log.error("Failed to process doc {}: {}", documentId, e.getMessage(), e);
-            doc.setStatus("FAILED");
-            documentRepo.save(doc);
-            // We acknowledge it even on failure to avoid infinite loops for now
-            // (Phase 10 covers Retries & Dead-Letter Queues)
+            
+            doc.setRetryCount(doc.getRetryCount() + 1);
+            
+            if (doc.getRetryCount() >= 3) {
+                // Max retries reached: mark FAILED, push to DLQ, and ACK
+                log.error("Max retries reached for doc {}. Moving to DLQ.", documentId);
+                doc.setStatus("FAILED");
+                documentRepo.save(doc);
+                
+                redisTemplate.opsForStream().add(
+                    org.springframework.data.redis.connection.stream.StreamRecords.string(
+                        (Map<String, String>) (Map<?, ?>) fields
+                    ).withStreamKey(IngestionProducer.DLQ_STREAM_KEY)
+                );
+            } else {
+                // Will retry: keep status PENDING/PROCESSING, push back to main stream, and ACK current message
+                log.info("Will retry doc {}. Retry count: {}", documentId, doc.getRetryCount());
+                doc.setStatus("PENDING");
+                documentRepo.save(doc);
+                
+                redisTemplate.opsForStream().add(
+                    org.springframework.data.redis.connection.stream.StreamRecords.string(
+                        (Map<String, String>) (Map<?, ?>) fields
+                    ).withStreamKey(IngestionProducer.STREAM_KEY)
+                );
+            }
+            
+            // Always ACK the current message ID so it doesn't get stuck in the consumer group PEL
             ackMessage(messageId);
         }
     }

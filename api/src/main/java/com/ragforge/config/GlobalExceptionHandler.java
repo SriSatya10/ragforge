@@ -34,6 +34,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    /** Handle RateLimitException to return 429 and Retry-After header. */
+    @ExceptionHandler(com.ragforge.ratelimit.RateLimitException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimit(com.ragforge.ratelimit.RateLimitException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now());
+        body.put("status", 429);
+        body.put("error", ex.getReason());
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(body);
+    }
+
     /** Handle ResponseStatusException (thrown by controllers for 401, 404, 409, etc.). */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleStatus(ResponseStatusException ex) {
