@@ -11,12 +11,21 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.MDC;
+
 /**
  * Centralized error handling.
  * Returns consistent JSON error responses instead of Spring's default HTML error page.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private void addTraceId(Map<String, Object> body) {
+        String traceId = MDC.get("traceId");
+        if (traceId != null) {
+            body.put("traceId", traceId);
+        }
+    }
 
     /** Handle validation errors from @Valid annotations. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -30,6 +39,7 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors()
                 .forEach(err -> fieldErrors.put(err.getField(), err.getDefaultMessage()));
         body.put("errors", fieldErrors);
+        addTraceId(body);
 
         return ResponseEntity.badRequest().body(body);
     }
@@ -41,6 +51,7 @@ public class GlobalExceptionHandler {
         body.put("timestamp", Instant.now());
         body.put("status", 429);
         body.put("error", ex.getReason());
+        addTraceId(body);
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
@@ -54,6 +65,7 @@ public class GlobalExceptionHandler {
         body.put("timestamp", Instant.now());
         body.put("status", ex.getStatusCode().value());
         body.put("error", ex.getReason());
+        addTraceId(body);
 
         return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
@@ -65,6 +77,7 @@ public class GlobalExceptionHandler {
         body.put("timestamp", Instant.now());
         body.put("status", 500);
         body.put("error", "Internal server error");
+        addTraceId(body);
 
         // Log the full stacktrace for debugging (visible in container logs)
         ex.printStackTrace();
