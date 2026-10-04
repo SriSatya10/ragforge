@@ -1,7 +1,6 @@
 package com.ragforge.query;
 
 import com.ragforge.auth.TenantPrincipal;
-import com.ragforge.ingestion.EmbeddingClient;
 import com.ragforge.llm.LlmService;
 import com.ragforge.query.dto.Citation;
 import com.ragforge.query.dto.QueryRequest;
@@ -22,15 +21,12 @@ import java.util.List;
 @RequestMapping("/query")
 public class QueryController {
 
-    private final EmbeddingClient embeddingClient;
-    private final VectorSearchService vectorSearchService;
+    private final HybridSearchOrchestrator hybridSearchOrchestrator;
     private final LlmService llmService;
 
-    public QueryController(EmbeddingClient embeddingClient,
-                           VectorSearchService vectorSearchService,
+    public QueryController(HybridSearchOrchestrator hybridSearchOrchestrator,
                            LlmService llmService) {
-        this.embeddingClient = embeddingClient;
-        this.vectorSearchService = vectorSearchService;
+        this.hybridSearchOrchestrator = hybridSearchOrchestrator;
         this.llmService = llmService;
     }
 
@@ -39,14 +35,10 @@ public class QueryController {
             @Valid @RequestBody QueryRequest req,
             @AuthenticationPrincipal TenantPrincipal principal) {
 
-        // 1. Embed the question
-        List<List<Double>> embeddings = embeddingClient.embed(List.of(req.question()));
-        List<Double> queryEmbedding = embeddings.get(0);
-
-        // 2. Perform vector search in PostgreSQL
-        List<Citation> citations = vectorSearchService.search(
+        // 1 & 2. Perform Hybrid Search (Vector + Keyword) with Reciprocal Rank Fusion and Reranking
+        List<Citation> citations = hybridSearchOrchestrator.search(
                 principal.tenantId(),
-                queryEmbedding,
+                req.question(),
                 req.topK()
         );
 
@@ -56,3 +48,4 @@ public class QueryController {
         return new QueryResponse(answer, citations, false);
     }
 }
+
