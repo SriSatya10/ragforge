@@ -56,6 +56,7 @@ services:
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       ML_SERVICE_URL: ${ML_SERVICE_URL}
       UPLOAD_DIR: /data/uploads
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
     ports:
       - "8080:8080"
     volumes:

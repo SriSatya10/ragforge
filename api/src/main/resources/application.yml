@@ -48,6 +48,7 @@ jwt:
 app:
   upload-dir: ${UPLOAD_DIR:./uploads}
   ml-service-url: ${ML_SERVICE_URL:http://localhost:8000}
+  ollama-base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
 
 # File upload limits — Spring defaults to 1MB which is too small for PDFs
 spring.servlet.multipart:

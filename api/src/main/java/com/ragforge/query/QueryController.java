@@ -2,6 +2,7 @@ package com.ragforge.query;
 
 import com.ragforge.auth.TenantPrincipal;
 import com.ragforge.ingestion.EmbeddingClient;
+import com.ragforge.llm.LlmService;
 import com.ragforge.query.dto.Citation;
 import com.ragforge.query.dto.QueryRequest;
 import com.ragforge.query.dto.QueryResponse;
@@ -16,11 +17,6 @@ import java.util.List;
 
 /**
  * Handles RAG queries from clients.
- *
- * Phase 6 implementation: Basic vector search.
- * 1. Embed the user's question.
- * 2. Search for the most similar chunks.
- * 3. Return a mock answer (LLM integration comes in Phase 7).
  */
 @RestController
 @RequestMapping("/query")
@@ -28,11 +24,14 @@ public class QueryController {
 
     private final EmbeddingClient embeddingClient;
     private final VectorSearchService vectorSearchService;
+    private final LlmService llmService;
 
     public QueryController(EmbeddingClient embeddingClient,
-                           VectorSearchService vectorSearchService) {
+                           VectorSearchService vectorSearchService,
+                           LlmService llmService) {
         this.embeddingClient = embeddingClient;
         this.vectorSearchService = vectorSearchService;
+        this.llmService = llmService;
     }
 
     @PostMapping
@@ -51,9 +50,9 @@ public class QueryController {
                 req.topK()
         );
 
-        // 3. (Placeholder for Phase 7 LLM call)
-        String mockAnswer = "This is a placeholder answer. In Phase 7, the LLM will generate a real answer using the retrieved citations.";
+        // 3. Generate answer using LLM
+        String answer = llmService.generateAnswer(req.question(), citations);
 
-        return new QueryResponse(mockAnswer, citations, false);
+        return new QueryResponse(answer, citations, false);
     }
 }
