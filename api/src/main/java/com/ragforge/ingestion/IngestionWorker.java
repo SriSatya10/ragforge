@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -72,7 +73,7 @@ public class IngestionWorker {
         @SuppressWarnings("unchecked")
         List<MapRecord<String, Object, Object>> messages = redisTemplate.opsForStream().read(
                 org.springframework.data.redis.connection.stream.Consumer.from("ingestion-group", "worker-1"),
-                org.springframework.data.redis.connection.stream.StreamReadOptions.empty().count(1).block(1000),
+                org.springframework.data.redis.connection.stream.StreamReadOptions.empty().count(1).block(Duration.ofMillis(1000)),
                 StreamOffset.create(IngestionProducer.STREAM_KEY, ReadOffset.lastConsumed())
         );
 

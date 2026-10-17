@@ -1,0 +1,32 @@
+[
+  {
+    "id": "q1",
+    "question": "What is RagForge and what database does it use for vector search?",
+    "ground_truth_context": "PostgreSQL 16 with pgvector extension",
+    "expected_keywords": ["ragforge", "postgresql", "pgvector"]
+  },
+  {
+    "id": "q2",
+    "question": "How does tenant isolation work in RagForge?",
+    "ground_truth_context": "Tenant isolation is enforced at every database query using tenant_id and JWT or API Key authentication",
+    "expected_keywords": ["tenant", "isolation", "tenant_id", "jwt"]
+  },
+  {
+    "id": "q3",
+    "question": "What queuing mechanism is used for document ingestion?",
+    "ground_truth_context": "Redis Streams with consumer groups for asynchronous background document ingestion",
+    "expected_keywords": ["redis", "streams", "ingestion", "consumer group"]
+  },
+  {
+    "id": "q4",
+    "question": "How does RagForge implement semantic caching?",
+    "ground_truth_context": "Query embeddings are compared using cosine similarity against previously cached queries with a similarity threshold",
+    "expected_keywords": ["cache", "embedding", "cosine", "similarity"]
+  },
+  {
+    "id": "q5",
+    "question": "What search algorithms are combined in hybrid search?",
+    "ground_truth_context": "Full-text search using PostgreSQL tsvector and vector similarity search combined via Reciprocal Rank Fusion",
+    "expected_keywords": ["hybrid", "full-text", "vector", "reciprocal rank fusion", "rrf"]
+  }
+]

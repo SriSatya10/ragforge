@@ -1,0 +1,11 @@
+# RagForge Technical Architecture Overview
+
+RagForge is an enterprise multi-tenant RAG (Retrieval-Augmented Generation) API platform.
+
+## Architecture and Components
+- **Vector Database**: RagForge uses PostgreSQL 16 with pgvector extension for high-performance vector similarity search alongside relational metadata.
+- **Tenant Isolation**: Tenant isolation is strictly enforced at every database query using tenant_id and JWT or API Key authentication. Tenant data is never mixed.
+- **Async Ingestion Queue**: Redis Streams with consumer groups provide durable asynchronous background document ingestion with retry handling and dead-letter queues.
+- **Hybrid Search**: Full-text search using PostgreSQL tsvector and vector similarity search are combined via Reciprocal Rank Fusion (RRF) and reranked using cross-encoders.
+- **Semantic Caching**: Query embeddings are compared using cosine similarity against previously cached queries with a similarity threshold of 0.95 to eliminate redundant LLM calls.
+- **Observability**: Prometheus metrics and Grafana dashboards monitor request rates, p95 latencies, error rates, and cache hit ratios.

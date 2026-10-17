@@ -25,13 +25,14 @@ class QueryControllerTest {
     @Mock private LlmService llmService;
     @Mock private SemanticCacheService semanticCacheService;
     @Mock private EmbeddingClient embeddingClient;
+    @Mock private com.ragforge.usage.UsageService usageService;
 
     private QueryController queryController;
 
     @BeforeEach
     void setUp() {
         queryController = new QueryController(
-                hybridSearchOrchestrator, llmService, semanticCacheService, embeddingClient);
+                hybridSearchOrchestrator, llmService, semanticCacheService, embeddingClient, usageService);
     }
 
     @Test

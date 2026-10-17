@@ -1,8 +1,8 @@
 package com.ragforge;
 
 import com.ragforge.auth.JwtService;
-import com.ragforge.auth.Tenant;
-import com.ragforge.auth.TenantRepository;
+import com.ragforge.tenant.Tenant;
+import com.ragforge.tenant.TenantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

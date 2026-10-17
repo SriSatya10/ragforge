@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   # --- PostgreSQL with pgvector extension for vector similarity search ---
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.0-pg16
     container_name: ragforge-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -57,6 +55,7 @@ services:
       ML_SERVICE_URL: ${ML_SERVICE_URL}
       UPLOAD_DIR: /data/uploads
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-phi3}
       ZIPKIN_URL: http://zipkin:9411
     ports:
       - "8080:8080"
@@ -74,6 +73,34 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # --- Prometheus Metrics Scraper ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ragforge-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - api
+
+  # --- Grafana Dashboard UI ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ragforge-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - prometheus
 
   # --- Python ML sidecar for embeddings and reranking ---
   ml-service:
@@ -95,3 +122,4 @@ volumes:
   pgdata:
   redisdata:
   uploads:
+  grafanadata:

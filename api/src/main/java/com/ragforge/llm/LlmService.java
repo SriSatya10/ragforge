@@ -8,6 +8,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,14 +20,17 @@ public class LlmService {
 
     private final RestTemplate restTemplate;
     private final String ollamaBaseUrl;
-    
-    // Default model to use. Llama 3 or Mistral are good defaults for Ollama.
-    private static final String MODEL_NAME = "llama3";
+    private final String modelName;
 
     public LlmService(RestTemplateBuilder builder,
-                      @Value("${app.ollama-base-url}") String ollamaBaseUrl) {
-        this.restTemplate = builder.build();
+                      @Value("${app.ollama-base-url}") String ollamaBaseUrl,
+                      @Value("${app.ollama-model:phi3}") String modelName) {
+        this.restTemplate = builder
+                .setConnectTimeout(Duration.ofSeconds(10))
+                .setReadTimeout(Duration.ofSeconds(120))
+                .build();
         this.ollamaBaseUrl = ollamaBaseUrl;
+        this.modelName = modelName;
     }
 
     /**
@@ -54,7 +58,7 @@ public class LlmService {
             Answer:
             """.formatted(context, question);
 
-        OllamaRequest request = new OllamaRequest(MODEL_NAME, prompt, false);
+        OllamaRequest request = new OllamaRequest(modelName, prompt, false);
 
         try {
             OllamaResponse response = restTemplate.postForObject(
