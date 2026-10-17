@@ -33,6 +33,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // Enable CORS for web frontend clients
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
             // No CSRF needed for stateless JWT/API key auth
             .csrf(csrf -> csrf.disable())
 
@@ -51,6 +54,18 @@ public class SecurityConfig {
             .addFilterAfter(jwtFilter, ApiKeyAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOriginPatterns(java.util.List.of("*"));
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setAllowCredentials(true);
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     /** BCrypt for password hashing — industry standard, adaptive cost factor. */

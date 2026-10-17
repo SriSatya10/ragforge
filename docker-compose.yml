@@ -118,6 +118,17 @@ services:
       # Models take time to download on first run
       start_period: 120s
 
+  # --- Web Frontend UI ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ragforge-frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
+
 volumes:
   pgdata:
   redisdata:

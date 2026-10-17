@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RagForge — Multi-Tenant RAG Platform</title>
+  <link rel="stylesheet" href="index.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title">RagForge</div>
+          <span class="brand-badge">Enterprise RAG</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button id="nav-chat" class="nav-item active" onclick="switchView('chat')">
+          <span class="nav-icon">💬</span>
+          <span>RAG Chat Console</span>
+        </button>
+
+        <button id="nav-docs" class="nav-item" onclick="switchView('docs')">
+          <span class="nav-icon">📂</span>
+          <span>Documents & Ingestion</span>
+        </button>
+
+        <button id="nav-usage" class="nav-item" onclick="switchView('usage')">
+          <span class="nav-icon">📊</span>
+          <span>Telemetry & Analytics</span>
+        </button>
+
+        <button id="nav-obs" class="nav-item" onclick="switchView('obs')">
+          <span class="nav-icon">🔭</span>
+          <span>System Observability</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="tenant-badge-card" id="tenant-card">
+          <div class="tenant-meta">
+            <div class="tenant-name" id="tenant-display-name">Not Signed In</div>
+            <div class="tenant-email" id="tenant-display-email">Sign in to start querying</div>
+          </div>
+          <button id="btn-logout" class="btn-icon-logout" title="Sign Out" onclick="logout()">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <header class="topbar">
+        <h1 class="topbar-title" id="page-title">RAG Chat Console</h1>
+        <div class="topbar-actions">
+          <div class="status-pill">
+            <div class="status-dot"></div>
+            <span id="system-status-text">Backend Connected (v5)</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- 1. CHAT VIEW -->
+      <section id="view-chat" class="view-section active">
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message-row assistant">
+              <div class="message-avatar">⚡</div>
+              <div class="message-bubble">
+                Welcome to <strong>RagForge</strong>! I am your AI assistant grounded in your uploaded documents. 
+                Ask any question below, and I will retrieve relevant passages with hybrid search, evaluate context with neural rerankers, and synthesize grounded answers with citations.
+              </div>
+            </div>
+          </div>
+
+          <form id="chat-form" class="chat-input-bar" onsubmit="handleSendQuery(event)">
+            <input 
+              type="text" 
+              id="query-input" 
+              class="chat-input" 
+              placeholder="Ask a question about your documents... (e.g., What is RagForge?)" 
+              autocomplete="off"
+              required
+            />
+            <button type="submit" id="btn-send-query" class="btn-send">
+              <span>Send</span>
+              <span>➔</span>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 2. DOCUMENTS & INGESTION VIEW -->
+      <section id="view-docs" class="view-section">
+        <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
+          <div class="dropzone-icon">📤</div>
+          <h2 class="dropzone-title">Upload Knowledge Base Documents</h2>
+          <p class="dropzone-subtitle">Click to browse or drag and drop .txt, .pdf, or .md files for async vector ingestion</p>
+        </div>
+
+        <div class="data-card">
+          <div class="table-header-row">
+            <h3 class="table-title">Uploaded Documents</h3>
+            <button class="btn-external" onclick="refreshDocuments()">🔄 Refresh</button>
+          </div>
+          <table class="custom-table" id="docs-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Filename</th>
+                <th>Status</th>
+                <th>Chunks Indexed</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="docs-table-body">
+              <tr>
+                <td colspan="5" style="text-align:center; color:var(--text-muted); padding:32px;">No documents uploaded yet. Upload your first document above!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. USAGE & ANALYTICS VIEW -->
+      <section id="view-usage" class="view-section">
+        <div class="table-header-row">
+          <div>
+            <h2 style="font-size:22px; font-weight:700;">Tenant Usage & Telemetry</h2>
+            <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Live request metrics tracked per tenant in PostgreSQL and Micrometer</p>
+          </div>
+          <button class="btn-external" onclick="fetchTenantUsage()">🔄 Refresh Metrics</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Requests</div>
+            <div class="stat-value" id="stat-total-reqs">0</div>
+            <div class="stat-subtext">All API calls logged</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Semantic Cache Hits</div>
+            <div class="stat-value" id="stat-cache-hits" style="color:var(--accent-cyan);">0</div>
+            <div class="stat-subtext">Queries served in &lt;100ms</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Cache Hit Ratio</div>
+            <div class="stat-value" id="stat-cache-ratio">0%</div>
+            <div class="stat-subtext">Cost & latency reduction</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Avg Execution Latency</div>
+            <div class="stat-value" id="stat-avg-latency">0 ms</div>
+            <div class="stat-subtext">Cold vs warm aggregate</div>
+          </div>
+        </div>
+
+        <div class="data-card" style="margin-top:12px;">
+          <h3 class="table-title" style="margin-bottom:16px;">Requests By Endpoint</h3>
+          <div id="endpoint-breakdown" style="color:var(--text-secondary); font-size:14px;">
+            No requests registered yet.
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. OBSERVABILITY VIEW -->
+      <section id="view-obs" class="view-section">
+        <div style="margin-bottom:12px;">
+          <h2 style="font-size:22px; font-weight:700;">Observability & Tracing Services</h2>
+          <p style="color:var(--text-secondary); font-size:14px; margin-top:4px;">Direct access to deep telemetry, live dashboards, and distributed tracing</p>
+        </div>
+
+        <div class="obs-grid">
+          <div class="obs-card">
+            <div>
+              <div style="font-size:32px; margin-bottom:12px;">📈</div>
+              <h3 class="obs-title">Grafana Dashboards</h3>
+              <p class="obs-desc">Pre-configured RAGForge API Dashboard showing real-time query throughput, p95 latencies, HikariCP connection pools, and JVM heap.</p>
+            </div>
+            <a href="http://localhost:3000" target="_blank" class="btn-external">Open Grafana (Port 3000) ↗</a>
+          </div>
+
+          <div class="obs-card">
+            <div>
+              <div style="font-size:32px; margin-bottom:12px;">📊</div>
+              <h3 class="obs-title">Prometheus Metrics</h3>
+              <p class="obs-desc">Real-time time-series database scraping Spring Boot Actuator metrics (`/actuator/prometheus`) every 10 seconds.</p>
+            </div>
+            <a href="http://localhost:9090" target="_blank" class="btn-external">Open Prometheus (Port 9090) ↗</a>
+          </div>
+
+          <div class="obs-card">
+            <div>
+              <div style="font-size:32px; margin-bottom:12px;">⚡</div>
+              <h3 class="obs-title">Zipkin Distributed Tracing</h3>
+              <p class="obs-desc">Trace distributed latency waterfalls across Spring Boot API, PostgreSQL queries, Redis calls, and FastAPI ML sidecar inferences.</p>
+            </div>
+            <a href="http://localhost:9411" target="_blank" class="btn-external">Open Zipkin (Port 9411) ↗</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Auth Modal Dialog -->
+  <div class="modal-overlay" id="auth-modal" style="display:none;">
+    <div class="auth-card">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+        <div class="brand-icon" style="width:34px; height:34px; font-size:16px;">⚡</div>
+        <h2 style="font-family:'Outfit',sans-serif; font-size:20px;">Tenant Authentication</h2>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="toggleAuthTab('login')">Sign In</div>
+        <div class="auth-tab" id="tab-register" onclick="toggleAuthTab('register')">Register Organization</div>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group" id="group-tenant-name" style="display:none;">
+          <label class="form-label" for="auth-name">Organization / Tenant Name</label>
+          <input type="text" id="auth-name" class="form-input" placeholder="e.g. Acme AI Corp" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="auth-email">Tenant Email</label>
+          <input type="email" id="auth-email" class="form-input" placeholder="admin@tenant.com" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="auth-password">Password</label>
+          <input type="password" id="auth-password" class="form-input" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" id="btn-auth-submit" class="btn-primary">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
