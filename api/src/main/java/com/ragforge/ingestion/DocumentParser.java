@@ -22,10 +22,9 @@ public class DocumentParser {
         
         if (lowerName.endsWith(".pdf")) {
             return parsePdf(filePath);
-        } else if (lowerName.endsWith(".txt")) {
-            return Files.readString(filePath);
         } else {
-            throw new IllegalArgumentException("Unsupported file type: " + filename);
+            // Read standard text, markdown, csv, json, log files
+            return Files.readString(filePath, java.nio.charset.StandardCharsets.UTF_8);
         }
     }
 

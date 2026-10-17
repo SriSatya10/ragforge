@@ -97,7 +97,7 @@
       <!-- 2. DOCUMENTS & INGESTION VIEW -->
       <section id="view-docs" class="view-section">
         <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
-          <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
+          <input type="file" id="file-input" accept=".txt,.pdf,.md,.markdown,.csv,.json,.log" style="display:none;" onchange="handleFileUpload(event)">
           <div class="dropzone-icon">📤</div>
           <h2 class="dropzone-title">Upload Knowledge Base Documents</h2>
           <p class="dropzone-subtitle">Click to browse or drag and drop .txt, .pdf, or .md files for async vector ingestion</p>

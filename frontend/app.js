@@ -316,8 +316,22 @@ async function uploadFile(file) {
       body: formData
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Upload failed");
+    if (res.status === 401 || res.status === 403) {
+      showToast("Session expired, please sign in again", true);
+      logout();
+      return;
+    }
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (_) {
+      throw new Error(`Upload failed (Server returned HTTP ${res.status})`);
+    }
+
+    if (!res.ok) {
+      throw new Error(data.message || data.error || data.detail || `Upload rejected (${res.status})`);
+    }
 
     showToast(`Document uploaded (ID: ${data.documentId}). Ingestion started.`);
 

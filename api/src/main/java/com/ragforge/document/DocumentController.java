@@ -75,10 +75,24 @@ public class DocumentController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
         }
 
+        String filename = file.getOriginalFilename();
         String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
+        String lowerName = filename != null ? filename.toLowerCase() : "";
+
+        boolean isAllowedExt = lowerName.endsWith(".txt") || lowerName.endsWith(".pdf") ||
+                               lowerName.endsWith(".md") || lowerName.endsWith(".markdown") ||
+                               lowerName.endsWith(".json") || lowerName.endsWith(".csv") ||
+                               lowerName.endsWith(".log");
+
+        boolean isAllowedMime = contentType != null && 
+                               (contentType.startsWith("text/") || 
+                                contentType.equals("application/pdf") || 
+                                contentType.equals("application/octet-stream") ||
+                                contentType.equals("application/json"));
+
+        if (!isAllowedExt && !isAllowedMime) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Only PDF and TXT files are supported. Got: " + contentType);
+                    "Unsupported file format: " + filename + ". Supported: PDF, TXT, MD, CSV, JSON, LOG.");
         }
 
         Tenant tenant = tenantRepo.findById(principal.tenantId())

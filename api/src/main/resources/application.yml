@@ -1,7 +1,14 @@
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ragforge}
     username: ${SPRING_DATASOURCE_USERNAME:ragforge}
